@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSmart - AI Learning & Monitoring</title>
+    <style>
+        /* --- CSS STYLES --- */
+        :root {
+            --primary: #2563EB; /* Royal Blue */
+            --accent: #10B981;  /* Green */
+            --bg: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text: #1F2937;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; }
+
+        /* Navigation */
+        nav { background: var(--primary); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .logo { font-size: 1.5rem; font-weight: bold; }
+        .nav-links button { background: none; border: none; color: white; margin-left: 15px; cursor: pointer; font-size: 1rem; }
+        .nav-links button:hover { text-decoration: underline; }
+
+        /* Layout */
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .hidden { display: none; }
+        
+        /* Cards */
+        .card { background: var(--card-bg); padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; animation: fadeIn 0.5s; }
+        
+        /* Forms */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; box-sizing: border-box; }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 1rem; margin-top: 10px; transition: background 0.3s; }
+        .btn:hover { background: #1D4ED8; }
+
+        /* Dashboard Grid */
+        .subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1rem; }
+        .subject-card { border: 1px solid #E5E7EB; border-radius: 8px; padding: 1.5rem; text-align: center; background: #FAFAFA; transition: transform 0.2s; }
+        .subject-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .doc-link { display: block; margin-top: 10px; color: var(--primary); text-decoration: none; font-weight: bold; }
+
+        /* Progress Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #E5E7EB; }
+        th { background-color: #F9FAFB; }
+        .status-good { color: var(--accent); font-weight: bold; }
+        .status-warn { color: #F59E0B; font-weight: bold; }
+
+        /* AI Chat */
+        .ai-container { display: flex; flex-direction: column; height: 400px; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; }
+        .ai-messages { flex: 1; padding: 15px; overflow-y: auto; background: #F9FAFB; }
+        .ai-input-area { padding: 15px; background: white; border-top: 1px solid #E5E7EB; display: flex; gap: 10px; }
+        .msg { padding: 8px 12px; border-radius: 15px; margin-bottom: 10px; max-width: 80%; }
+        .msg-user { background: var(--primary); color: white; align-self: flex-end; margin-left: auto; }
+        .msg-ai { background: #E5E7EB; color: black; align-self: flex-start; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="logo">EduSmart EdTech</div>
+    <div class="nav-links" id="nav-buttons" style="display: none;">
+        <button onclick="showSection('dashboard')">Dashboard</button>
+        <button onclick="showSection('progress')">Progress & Monitor</button>
+        <button onclick="showSection('ai-tutor')">AI Tutor</button>
+        <button onclick="logout()" style="color: #FECACA;">Logout</button>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div id="profile-section" class="card">
+        <h2>Student Profile Setup</h2>
+        <p>Please enter your details. You can enter <strong>multiple subjects</strong> separated by commas.</p>
+        <form onsubmit="saveProfile(event)">
+            <div class="form-grid">
+                <div><label>Student Name</label><input type="text" id="p_name" required></div>
+                <div><label>Class / Grade</label><input type="text" id="p_class" required></div>
+                <div><label>Student Mobile</label><input type="tel" id="p_smobile" required></div>
+                <div><label>Parent Mobile</label><input type="tel" id="p_pmobile" required></div>
+                <div style="grid-column: span 2;"><label>Email ID</label><input type="email" id="p_email" required></div>
+                <div style="grid-column: span 2;"><label>Address</label><textarea id="p_address" rows="2" required></textarea></div>
+                
+                <div style="grid-column: span 2; background: #eff6ff; padding: 15px; border-radius: 8px;">
+                    <label>Subjects (Separate with comma)</label>
+                    <input type="text" id="p_subjects" placeholder="e.g. Mathematics, Physics, Computer Science, English" required>
+                    <small>Type all your subjects here. We will generate resources for each.</small>
+                </div>
+            </div>
+            <button type="submit" class="btn">Save & Enter Platform</button>
+        </form>
+    </div>
+
+    <div id="dashboard-section" class="card hidden">
+        <h2>My Learning Dashboard</h2>
+        <p>Access your Google Docs (Notes) and Google Forms (Tests) for your selected subjects.</p>
+        <div id="subject-container" class="subject-grid">
+            </div>
+    </div>
+
+    <div id="progress-section" class="card hidden">
+        <h2>Performance Monitoring</h2>
+        <p>Real-time tracking of attendance and test scores per subject.</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Attendance</th>
+                    <th>Last Test Score</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="progress-table-body">
+                </tbody>
+        </table>
+
+        <div style="margin-top: 20px; text-align: right;">
+            <button class="btn" onclick="triggerNotification()">📩 Send Report to Parents (Email/SMS)</button>
+            <p id="notify-msg" style="color: green; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <div id="ai-tutor-section" class="card hidden">
+        <h2>🤖 AI Smart Search & Tutor</h2>
+        <p>Ask doubts, get explanations, or search for definitions instantly (Online Mode).</p>
+        
+        <div class="ai-container">
+            <div id="chat-history" class="ai-messages">
+                <div class="msg msg-ai">Hello! I am your AI Tutor. Ask me any doubt about your subjects.</div>
+            </div>
+            <div class="ai-input-area">
+                <input type="text" id="ai-input" placeholder="Type your doubt here..." onkeypress="handleEnter(event)">
+                <button class="btn" style="margin-top:0;" onclick="askAI()">Search / Ask</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- DATABASE MOCK (Local Storage) ---
+    // In a real app, these links would come from your backend database
+    const resourceLinks = {
+        default: { note: "https://docs.google.com", test: "https://forms.google.com" },
+        // You can add specific mappings if you want
+        // "math": { note: "...", test: "..." } 
+    };
+
+    // --- 1. PROFILE LOGIC ---
+    function saveProfile(e) {
+        e.preventDefault();
+        
+        // 1. Get Values
+        const subjectsRaw = document.getElementById('p_subjects').value;
+        const subjectsArray = subjectsRaw.split(',').map(s => s.trim()).filter(s => s !== "");
+
+        const userProfile = {
+            name: document.getElementById('p_name').value,
+            parentMobile: document.getElementById('p_pmobile').value,
+            email: document.getElementById('p_email').value,
+            subjects: subjectsArray
+        };
+
+        // 2. Save Data
+        localStorage.setItem('eduUser', JSON.stringify(userProfile));
+
+        // 3. Initialize App
+        loadApp(userProfile);
+    }
+
+    // --- 2. INITIALIZE DASHBOARD ---
+    function loadApp(user) {
+        document.getElementById('profile-section').classList.add('hidden');
+        document.getElementById('nav-buttons').style.display = 'block';
+        showSection('dashboard');
+
+        // A. Generate Subject Cards
+        const container = document.getElementById('subject-container');
+        container.innerHTML = ''; // Clear previous
+
+        user.subjects.forEach(sub => {
+            const card = document.createElement('div');
+            card.className = 'subject-card';
+            card.innerHTML = `
+                <h3>${sub}</h3>
+                <p>Study Material</p>
+                <a href="${resourceLinks.default.note}" target="_blank" class="doc-link">📄 Open Notes (Google Doc)</a>
+                <a href="${resourceLinks.default.test}" target="_blank" class="doc-link">📝 Take Test (Google Form)</a>
+            `;
+            container.appendChild(card);
+        });
+
+        // B. Generate Progress Table (Mock Data)
+        const tbody = document.getElementById('progress-table-body');
+        tbody.innerHTML = '';
+        
+        user.subjects.forEach(sub => {
+            // Simulating random stats for demo
+            const attendance = Math.floor(Math.random() * (100 - 70) + 70); 
+            const score = Math.floor(Math.random() * (100 - 50) + 50);
+            const statusClass = attendance > 85 ? 'status-good' : 'status-warn';
+            const statusText = attendance > 85 ? 'Excellent' : 'Needs Improvement';
+
+            const row = `
+                <tr>
+                    <td>${sub}</td>
+                    <td>${attendance}%</td>
+                    <td>${score}/100</td>
+                    <td class="${statusClass}">${statusText}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    // --- 3. NOTIFICATION LOGIC ---
+    function triggerNotification() {
+        const user = JSON.parse(localStorage.getItem('eduUser'));
+        const msg = document.getElementById('notify-msg');
+        
+        msg.innerText = "Connecting to mail server...";
+        
+        setTimeout(() => {
+            msg.innerText = `✅ Progress Report sent to Parent Mobile (${user.parentMobile}) and Email (${user.email}).`;
+        }, 1500);
+    }
+
+    // --- 4. AI SEARCH ENGINE LOGIC ---
+    function handleEnter(e) {
+        if (e.key === "Enter") askAI();
+    }
+
+    function askAI() {
+        const input = document.getElementById('ai-input');
+        const history = document.getElementById('chat-history');
+        const question = input.value.trim();
+
+        if (!question) return;
+
+        // Add User Message
+        history.innerHTML += `<div class="msg msg-user">${question}</div>`;
+        input.value = "";
+        history.scrollTop = history.scrollHeight; // Auto scroll
+
+        // Simulate AI Thinking
+        setTimeout(() => {
+            // Simple Logic for Demo (In real app, fetch OpenAI API here)
+            let answer = "I'm searching my database for that answer...";
+            
+            if (question.toLowerCase().includes("math")) {
+                answer = "In Mathematics, this concept usually relates to the formulas found in Chapter 3. Would you like me to open the Formula Sheet?";
+            } else if (question.toLowerCase().includes("physics") || question.toLowerCase().includes("force")) {
+                answer = "Newton's laws suggest that Force = Mass x Acceleration. Please check the 'Physics' notes in your dashboard for the diagram.";
+            } else {
+                answer = `I found 3 resources regarding "<strong>${question}</strong>". It is a key topic in your syllabus. I recommend reading the summary notes provided in the Google Doc link.`;
+            }
+
+            history.innerHTML += `<div class="msg msg-ai">${answer}</div>`;
+            history.scrollTop = history.scrollHeight;
+        }, 1000);
+    }
+
+    // --- UTILITIES ---
+    function showSection(id) {
+        // Hide all main sections
+        ['dashboard-section', 'progress-section', 'ai-tutor-section'].forEach(sec => {
+            document.getElementById(sec).classList.add('hidden');
+        });
+        // Show selected
+        document.getElementById(id + '-section').classList.remove('hidden');
+    }
+
+    function logout() {
+        localStorage.removeItem('eduUser');
+        location.reload();
+    }
+
+    // Check login on load
+    window.onload = function() {
+        const saved = localStorage.getItem('eduUser');
+        if (saved) {
+            loadApp(JSON.parse(saved));
+        }
+    }
+</script>
+
+</body>
+</html>
